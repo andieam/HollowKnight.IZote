@@ -89,6 +89,9 @@ public class IZote : Mod
             Log("Removing Grey Prince.");
             var greyPrince = greyPrinceTransform.gameObject;
             UnityEngine.Object.Destroy(greyPrince);
+            HeroController.instance.RUN_SPEED = 8.3f;
+            HeroController.instance.RUN_SPEED_CH = 10;
+            HeroController.instance.RUN_SPEED_CH_COMBO = 11.5f;
             knight.GetComponent<Rigidbody2D>().gravityScale = 0.79f;
             HeroController.instance.JUMP_SPEED = 16.65f;
         }
@@ -119,6 +122,9 @@ public class IZote : Mod
                 }, 0);
             }
             setupComplete = false;
+            HeroController.instance.RUN_SPEED = 12;
+            HeroController.instance.RUN_SPEED_CH = 12;
+            HeroController.instance.RUN_SPEED_CH_COMBO = 12;
             knight.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
             HeroController.instance.JUMP_SPEED = 25;
         }
