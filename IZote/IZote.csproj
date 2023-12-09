@@ -54,6 +54,9 @@
 		<Reference Include="Satchel">
 			<HintPath>$(ReferenceInstallation)/Mods/Satchel/Satchel.dll</HintPath>
 		</Reference>
+		<Reference Include="HKMirror">
+			<HintPath>$(ReferenceInstallation)/Mods/HKMirror/HKMirror.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<Target Name="Installation" AfterTargets="PostBuildEvent">
 		<Copy SourceFiles="$(TargetDir)/$(TargetName).dll" DestinationFolder="$(ActualInstallation)/Mods/$(TargetName)" />

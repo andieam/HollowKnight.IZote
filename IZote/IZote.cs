@@ -1,7 +1,8 @@
-﻿global using Modding;
-global using UnityEngine;
-using GlobalEnums;
+﻿using GlobalEnums;
+using HKMirror.Reflection;
+using Modding;
 using Satchel;
+using UnityEngine;
 
 namespace IZote;
 public class IZote : Mod
@@ -17,6 +18,7 @@ public class IZote : Mod
     public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
         ModHooks.HeroUpdateHook += HeroUpdateHook;
+        HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.DoAttack += DoAttack;
         greyPrinceTemplate = preloadedObjects["GG_Grey_Prince_Zote"]["Grey Prince"];
     }
     private void RewriteInitStates(PlayMakerFSM control)
@@ -80,6 +82,21 @@ public class IZote : Mod
         }, 0);
         control.RemoveTransition("Jump", "FINISHED");
     }
+    private void RewriteChargeStates(PlayMakerFSM control)
+    {
+        var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
+        control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Charge Antic", 3).spawnPoint = audioSpawnPoint;
+        control.RemoveAction("Charge Antic", 2);
+        control.RemoveAction("Charge Antic", 1);
+        control.RemoveAction("Charge Start", 7);
+        control.RemoveAction("Charge Start", 6);
+        control.RemoveAction("Charge Start", 5);
+        control.RemoveAction("Charge Start", 0);
+        control.RemoveTransition("Charge Start", "FINISHED");
+        control.RemoveTransition("Charge Start", "L");
+        control.RemoveTransition("Charge Start", "R");
+        control.RemoveTransition("Charge Start", "FAIL");
+    }
     private void ToggleGreyPrince()
     {
         var knight = HeroController.instance.gameObject;
@@ -114,6 +131,7 @@ public class IZote : Mod
             RewriteStandStates(control);
             RewriteRunStates(control);
             RewriteJumpStates(control);
+            RewriteChargeStates(control);
             foreach (var state in control.FsmStates)
             {
                 state.InsertCustomAction(() =>
@@ -129,6 +147,27 @@ public class IZote : Mod
             HeroController.instance.JUMP_SPEED = 25;
         }
     }
+    private void DoAttack(On.HeroController.orig_DoAttack orig, HeroController self)
+    {
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (greyPrinceTransform != null) return;
+        orig(self);
+    }
+    // use ZOTE TITLE END to move state to a common idle state
+    private void SetStateAsync(PlayMakerFSM control, string state)
+    {
+        if (control.ActiveStateName == state) return;
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (control.ActiveStateName == "Run")
+        {
+            var particleRun = greyPrinceTransform.Find("Pt Run").gameObject;
+            particleRun.SetActive(false);
+            particleRun.SetActive(true);
+        }
+        control.SetState(state);
+    }
     private void UpdateStates()
     {
         var knight = HeroController.instance.gameObject;
@@ -137,35 +176,39 @@ public class IZote : Mod
         {
             var greyPrince = greyPrinceTransform.gameObject;
             var control = greyPrince.LocateMyFSM("Control");
-            var particleRun = greyPrinceTransform.Find("Pt Run").gameObject;
-            if (HeroController.instance.hero_state == ActorStates.running)
+            var charging = false;
+            if (HeroController.instance.Reflect().nailChargeTimer > 0)
             {
-                particleRun.SetActive(true);
+                HeroController.instance.Reflect().nailChargeTimer = 0;
+                if (HeroController.instance.cState.onGround)
+                {
+                    charging = true;
+                }
+            }
+            if (HeroController.instance.cState.onGround)
+            {
+                if (charging)
+                {
+                    if (control.ActiveStateName != "Charge Start")
+                    {
+                        SetStateAsync(control, "Charge Antic");
+                    }
+                }
+                else if (HeroController.instance.hero_state == ActorStates.running)
+                {
+                    if (control.ActiveStateName != "Run")
+                    {
+                        SetStateAsync(control, "Run Antic");
+                    }
+                }
+                else
+                {
+                    SetStateAsync(control, "Stand");
+                }
             }
             else
             {
-                particleRun.SetActive(false);
-            }
-            if (HeroController.instance.hero_state == ActorStates.running)
-            {
-                if (control.ActiveStateName != "Run Antic" && control.ActiveStateName != "Run")
-                {
-                    control.SetState("Run Antic");
-                }
-            }
-            else if (!HeroController.instance.cState.onGround)
-            {
-                if (control.ActiveStateName != "Jump")
-                {
-                    control.SetState("Jump");
-                }
-            }
-            else
-            {
-                if (control.ActiveStateName != "Stand")
-                {
-                    control.SetState("Stand");
-                }
+                SetStateAsync(control, "Jump");
             }
         }
     }
