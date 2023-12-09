@@ -59,6 +59,27 @@ public class IZote : Mod
         control.RemoveTransition("Run", "FINISHED");
         control.RemoveTransition("Run", "TOOK DAMAGE");
     }
+    private void RewriteJumpStates(PlayMakerFSM control)
+    {
+        var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
+        control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShot>("Jump", 1).spawnPoint = audioSpawnPoint;
+        control.RemoveAction("Jump", 6);
+        control.RemoveAction("Jump", 5);
+        control.RemoveAction("Jump", 4);
+        control.RemoveAction("Jump", 3);
+        control.InsertCustomAction("Jump", () =>
+        {
+            if (HeroController.instance.cState.jumping)
+            {
+                control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShot>("Jump", 3).volume = 1;
+            }
+            else
+            {
+                control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShot>("Jump", 3).volume = 0;
+            }
+        }, 0);
+        control.RemoveTransition("Jump", "FINISHED");
+    }
     private void ToggleGreyPrince()
     {
         var knight = HeroController.instance.gameObject;
@@ -68,6 +89,8 @@ public class IZote : Mod
             Log("Removing Grey Prince.");
             var greyPrince = greyPrinceTransform.gameObject;
             UnityEngine.Object.Destroy(greyPrince);
+            knight.GetComponent<Rigidbody2D>().gravityScale = 0.79f;
+            HeroController.instance.JUMP_SPEED = 16.65f;
         }
         else
         {
@@ -87,6 +110,7 @@ public class IZote : Mod
             RewriteInitStates(control);
             RewriteStandStates(control);
             RewriteRunStates(control);
+            RewriteJumpStates(control);
             foreach (var state in control.FsmStates)
             {
                 state.InsertCustomAction(() =>
@@ -95,6 +119,8 @@ public class IZote : Mod
                 }, 0);
             }
             setupComplete = false;
+            knight.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
+            HeroController.instance.JUMP_SPEED = 25;
         }
     }
     private void UpdateStates()
@@ -105,11 +131,27 @@ public class IZote : Mod
         {
             var greyPrince = greyPrinceTransform.gameObject;
             var control = greyPrince.LocateMyFSM("Control");
+            var particleRun = greyPrinceTransform.Find("Pt Run").gameObject;
+            if (HeroController.instance.hero_state == ActorStates.running)
+            {
+                particleRun.SetActive(true);
+            }
+            else
+            {
+                particleRun.SetActive(false);
+            }
             if (HeroController.instance.hero_state == ActorStates.running)
             {
                 if (control.ActiveStateName != "Run Antic" && control.ActiveStateName != "Run")
                 {
                     control.SetState("Run Antic");
+                }
+            }
+            else if (!HeroController.instance.cState.onGround)
+            {
+                if (control.ActiveStateName != "Jump")
+                {
+                    control.SetState("Jump");
                 }
             }
             else
