@@ -171,6 +171,7 @@ public class ZoteRewriter
         UnityEngine.Object.Destroy(greyPrince.GetComponent<Rigidbody2D>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyDeathEffectsUninfected>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyHitEffectsUninfected>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<HealthManager>());
         var audioSpawnPoint = new GameObject();
         audioSpawnPoint.name = "Audio Spawn Point";
         audioSpawnPoint.transform.parent = greyPrince.transform;
