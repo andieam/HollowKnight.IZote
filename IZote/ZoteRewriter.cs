@@ -308,6 +308,7 @@ public class ZoteRewriter
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyHitEffectsUninfected>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<HealthManager>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyDreamnailReaction>());
+            zoteling.layer = LayerMask.NameToLayer("Attack");
             var damageEnemiesCharge = zoteling.AddComponent<DamageEnemies>();
             var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
             damageEnemiesCharge.attackType = AttackTypes.Spell;
@@ -324,6 +325,36 @@ public class ZoteRewriter
                 UnityEngine.Object.Destroy(summonQueue[0]);
                 summonQueue.RemoveAt(0);
             }
+            var getTrackingEnemy = () =>
+            {
+                if (currentEnemy == null)
+                {
+                    foreach (var root in zoteling.scene.GetAllGameObjects())
+                    {
+                        foreach (var hm in root.GetComponentsInChildren<HealthManager>())
+                        {
+                            if (hm.hp > 0)
+                            {
+                                currentEnemy = hm.gameObject;
+                                return currentEnemy;
+                            }
+                        }
+                    }
+                    return HeroController.instance.gameObject;
+                }
+                else
+                {
+                    return currentEnemy;
+                }
+            };
+            fsm.InsertCustomAction("Buzzer Chase", () =>
+            {
+                fsm.GetAction<ChaseObject>("Buzzer Chase", 2).target.Value = getTrackingEnemy();
+            }, 0);
+            fsm.InsertCustomAction("Dir", () =>
+            {
+                fsm.GetAction<CheckTargetDirection>("Dir", 1).target.Value = getTrackingEnemy();
+            }, 0);
         }, 0);
         control.RemoveTransition("Spit Recover", "FINISHED");
         control.AddTransition("Spit Recover", "FINISHED", "Stand");
@@ -380,4 +411,5 @@ public class ZoteRewriter
     private List<GameObject> waveQueue = new();
     private List<GameObject> summonQueue = new();
     private readonly Dictionary<string, GameObject> prefabs = new();
+    private GameObject currentEnemy;
 }
