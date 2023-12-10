@@ -168,7 +168,10 @@ internal class KnightRewriter
         || control.ActiveStateName == "Slash Waves L"
         || control.ActiveStateName == "Slash Waves R"
         || control.ActiveStateName == "Stomp Slash"
-        || control.ActiveStateName == "Slash End")
+        || control.ActiveStateName == "Slash End"
+        || control.ActiveStateName == "Spit Antic"
+        || control.ActiveStateName == "Spit L"
+        || control.ActiveStateName == "Spit Recover")
         {
             controller.transform.localScale = directionLock;
         }
@@ -211,6 +214,7 @@ internal class KnightRewriter
         }
         else if (HeroController.instance.cState.onGround && controller.inputHandler.inputActions.quickCast.IsPressed && controller.CanAttack())
         {
+            directionLock = controller.transform.localScale;
             return "Spit";
         }
         else if (controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
