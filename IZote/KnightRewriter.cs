@@ -143,7 +143,19 @@ internal class KnightRewriter
         var runEffect = controller.gameObject.scene.FindGameObject("Run Effects(Clone)");
         if (runEffect != null)
         {
-            GameObject.Destroy(runEffect);
+            UnityEngine.Object.Destroy(runEffect);
+        }
+        var greyPrinceTransform = controller.transform.Find("Grey Prince");
+        var greyPrince = greyPrinceTransform.gameObject;
+        var control = greyPrince.LocateMyFSM("Control");
+        if (control.ActiveStateName == "Stomp"
+        || control.ActiveStateName == "Land Dir"
+        || control.ActiveStateName == "Slash Waves L"
+        || control.ActiveStateName == "Slash Waves R"
+        || control.ActiveStateName == "Stomp Slash"
+        || control.ActiveStateName == "Slash End")
+        {
+            controller.transform.localScale = directionLock;
         }
         if (!preivouslyOnGround && HeroController.instance.cState.onGround)
         {
@@ -162,9 +174,6 @@ internal class KnightRewriter
         if (HeroController.instance.cState.onGround && controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
         {
             var knight = controller.gameObject;
-            var greyPrinceTransform = knight.transform.Find("Grey Prince");
-            var greyPrince = greyPrinceTransform.gameObject;
-            var control = greyPrince.LocateMyFSM("Control");
             var rigidbody2D = knight.GetComponent<Rigidbody2D>();
             var velocity = rigidbody2D.velocity;
             if (control.ActiveStateName == "Charge Start" && Mathf.Abs(velocity.x) < 1)
@@ -180,6 +189,7 @@ internal class KnightRewriter
         {
             mustStomp = true;
             controller.gameObject.GetComponent<Rigidbody2D>().gravityScale = 4;
+            directionLock = controller.transform.localScale;
             return "Stomp";
         }
         else if (mustStomp)
@@ -206,4 +216,5 @@ internal class KnightRewriter
     private float heightScale = 2;
     private bool preivouslyOnGround;
     private bool mustStomp;
+    private Vector3 directionLock;
 }
