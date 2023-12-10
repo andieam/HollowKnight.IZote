@@ -58,7 +58,10 @@ public class IZote : Mod
             || control.ActiveStateName == "Stomp Slash"
             || control.ActiveStateName == "Slash End")
         {
-            return;
+            if (state != "Stomp Shift L")
+                return;
+            var stompHit = control.gameObject.Find("Stomp Hit");
+            stompHit.SetActive(false);
         }
         if (control.ActiveStateName == "Run")
         {
