@@ -153,6 +153,10 @@ public class ZoteRewriter
     }
     private void RewriteSlashStates(PlayMakerFSM control)
     {
+        var stompHit = control.gameObject.Find("Stomp Hit");
+        stompHit.layer = LayerMask.NameToLayer("Attack");
+        stompHit.RemoveComponent<DamageHero>();
+        stompHit.AddComponent<DamageEnemies>();
         var updateShockWave = () =>
         {
             var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
@@ -193,6 +197,19 @@ public class ZoteRewriter
         control.RemoveAction("Stomp Slash", 4);
         control.RemoveAction("Stomp Slash", 3);
         control.RemoveAction("Stomp Slash", 2);
+        control.InsertCustomAction("Stomp Slash", () =>
+        {
+            var damageEnemiesCharge = stompHit.GetComponent<DamageEnemies>();
+            var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+            damageEnemiesCharge.attackType = (AttackTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("attackType").Value;
+            damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+            damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+            damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+            damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+            damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+            damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+            damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
+        }, 0);
         control.RemoveTransition("Slash End", "FINISHED");
         control.AddTransition("Slash End", "FINISHED", "Stand");
     }
