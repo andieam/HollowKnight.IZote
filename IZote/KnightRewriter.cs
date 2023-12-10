@@ -44,6 +44,7 @@ internal class KnightRewriter
         controller.DASH_SPEED = 35;
         controller.DASH_SPEED_SHARP = 35;
         controller.BIG_FALL_TIME = Mathf.Infinity;
+        preivouslyOnGround = controller.cState.onGround;
     }
     public void Exit()
     {

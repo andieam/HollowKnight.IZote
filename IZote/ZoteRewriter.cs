@@ -69,6 +69,16 @@ public class ZoteRewriter
     }
     private void RewriteLandStates(PlayMakerFSM control)
     {
+        control.InsertCustomAction("Land Waves", () =>
+        {
+            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
+            shockWave.transform.SetPositionY(control.transform.position.y - 4);
+        }, 9);
+        control.InsertCustomAction("Land Waves", () =>
+        {
+            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
+            shockWave.transform.SetPositionY(control.transform.position.y - 4);
+        }, 3);
         var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
         control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Land Normal", 3).spawnPoint = audioSpawnPoint;
         control.RemoveAction("Land Normal", 4);
