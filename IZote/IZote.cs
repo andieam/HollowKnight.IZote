@@ -47,7 +47,16 @@ public class IZote : Mod
         {
             return;
         }
-        if (control.ActiveStateName == "Land Waves" || control.ActiveStateName == "Land Normal")
+        if (control.ActiveStateName == "Land Waves"
+            || control.ActiveStateName == "Land Normal")
+        {
+            return;
+        }
+        if (control.ActiveStateName == "Land Dir"
+            || control.ActiveStateName == "Slash Waves L"
+            || control.ActiveStateName == "Slash Waves R"
+            || control.ActiveStateName == "Stomp Slash"
+            || control.ActiveStateName == "Slash End")
         {
             return;
         }
@@ -94,13 +103,17 @@ public class IZote : Mod
             {
                 SetStateSafe(control, "Jump");
             }
+            else if (state == "Land")
+            {
+                SetStateSafe(control, "Land Waves");
+            }
             else if (state == "Stomp")
             {
                 SetStateSafe(control, "Stomp");
             }
-            else if (state == "Land")
+            else if (state == "Slash")
             {
-                SetStateSafe(control, "Land Waves");
+                SetStateSafe(control, "Land Dir");
             }
             else if (state == "Charge")
             {

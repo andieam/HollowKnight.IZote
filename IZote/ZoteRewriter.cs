@@ -91,13 +91,6 @@ public class ZoteRewriter
         }, 0);
         control.RemoveTransition("Jump", "FINISHED");
     }
-    private void RewriteStompStates(PlayMakerFSM control)
-    {
-        control.RemoveAction("Stomp", 4);
-        control.RemoveAction("Stomp", 3);
-        control.RemoveAction("Stomp", 2);
-        control.RemoveAction("Stomp", 1);
-    }
     private void RewriteLandStates(PlayMakerFSM control)
     {
         var updateShockWave = () =>
@@ -150,6 +143,58 @@ public class ZoteRewriter
         control.AddTransition("Land Normal", "FINISHED", "Stand");
         var slamEffect = control.gameObject.Find("Slam Effect");
         slamEffect.transform.localPosition = new Vector3(-0.39f, -2.8f, 0.01f);
+    }
+    private void RewriteStompStates(PlayMakerFSM control)
+    {
+        control.RemoveAction("Stomp", 4);
+        control.RemoveAction("Stomp", 3);
+        control.RemoveAction("Stomp", 2);
+        control.RemoveAction("Stomp", 1);
+    }
+    private void RewriteSlashStates(PlayMakerFSM control)
+    {
+        var updateShockWave = () =>
+        {
+            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
+            shockWave.transform.SetPositionY(control.transform.position.y - 4);
+            var spawn = shockWave.LocateMyFSM("Spawn");
+            spawn.AddCustomAction("Spawn", () =>
+            {
+                var spurt = spawn.FsmVariables.FindFsmGameObject("Spurt").Value;
+                spurt.RemoveComponent<DamageHero>();
+                var damageEnemiesCharge = spurt.AddComponent<DamageEnemies>();
+                var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+                damageEnemiesCharge.attackType = AttackTypes.Spell;
+                damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+                damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+                damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+                damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+                damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+                damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+                damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
+            });
+        };
+        control.InsertCustomAction("Slash Waves L", () =>
+        {
+            updateShockWave();
+        }, 9);
+        control.InsertCustomAction("Slash Waves L", () =>
+        {
+            updateShockWave();
+        }, 3);
+        control.InsertCustomAction("Slash Waves R", () =>
+        {
+            updateShockWave();
+        }, 9);
+        control.InsertCustomAction("Slash Waves R", () =>
+        {
+            updateShockWave();
+        }, 3);
+        control.RemoveAction("Stomp Slash", 4);
+        control.RemoveAction("Stomp Slash", 3);
+        control.RemoveAction("Stomp Slash", 2);
+        control.RemoveTransition("Stomp End", "FINISHED");
+        control.AddTransition("Stomp End", "FINISHED", "Stand");
     }
     private void RewriteChargeStates(PlayMakerFSM control)
     {
@@ -212,8 +257,9 @@ public class ZoteRewriter
         RewriteStandStates(control);
         RewriteRunStates(control);
         RewriteJumpStates(control);
-        RewriteStompStates(control);
         RewriteLandStates(control);
+        RewriteStompStates(control);
+        RewriteSlashStates(control);
         RewriteChargeStates(control);
         RewriteDashStates(control);
         foreach (var state in control.FsmStates)
