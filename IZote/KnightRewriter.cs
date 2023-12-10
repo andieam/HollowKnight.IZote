@@ -121,6 +121,12 @@ internal class KnightRewriter
                 controller.RUN_SPEED_CH = 12;
                 controller.RUN_SPEED_CH_COMBO = 12;
             }
+            if (!HeroController.instance.cState.onGround)
+            {
+                controller.RUN_SPEED = 12;
+                controller.RUN_SPEED_CH = 12;
+                controller.RUN_SPEED_CH_COMBO = 12;
+            }
         }
     }
     public void UpdateBefore()
