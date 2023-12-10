@@ -157,6 +157,17 @@ internal class KnightRewriter
         {
             controller.transform.localScale = directionLock;
         }
+        else
+        {
+            if (controller.transform.localScale.x < 0)
+            {
+                controller.cState.facingRight = true;
+            }
+            else
+            {
+                controller.cState.facingRight = false;
+            }
+        }
         if (!preivouslyOnGround && HeroController.instance.cState.onGround)
         {
             preivouslyOnGround = true;
