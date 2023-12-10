@@ -26,7 +26,7 @@ public class ZoteRewriter
         control.AddTransition("Activate", "FINISHED", "Roar");
         var wait = new Wait
         {
-            time = 2,
+            time = 3,
             realTime = false
         };
         foreach (var fsmEvent in control.FsmEvents)
