@@ -303,6 +303,21 @@ public class ZoteRewriter
             });
             IZote.instance.Log("Upgraded FSM: " + fsm.gameObject.name + " - " + fsm.FsmName + ".");
             control.FsmVariables.FindFsmGameObject("Zoteling").Value = zoteling;
+            UnityEngine.Object.Destroy(zoteling.GetComponent<DamageHero>());
+            UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyDeathEffectsUninfected>());
+            UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyHitEffectsUninfected>());
+            UnityEngine.Object.Destroy(zoteling.GetComponent<HealthManager>());
+            UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyDreamnailReaction>());
+            var damageEnemiesCharge = zoteling.AddComponent<DamageEnemies>();
+            var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+            damageEnemiesCharge.attackType = AttackTypes.Spell;
+            damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+            damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+            damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+            damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+            damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+            damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+            damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
             summonQueue.Add(zoteling);
             if (summonQueue.Count > 2)
             {
@@ -326,6 +341,7 @@ public class ZoteRewriter
         UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyDeathEffectsUninfected>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyHitEffectsUninfected>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<HealthManager>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyDreamnailReaction>());
         var audioSpawnPoint = new GameObject();
         audioSpawnPoint.name = "Audio Spawn Point";
         audioSpawnPoint.transform.parent = greyPrince.transform;
