@@ -169,6 +169,8 @@ public class ZoteRewriter
         stompHit.layer = LayerMask.NameToLayer("Attack");
         stompHit.RemoveComponent<DamageHero>();
         stompHit.AddComponent<DamageEnemies>();
+        control.GetAction<SetScale>("Slash Waves L", 3).x = 4;
+        control.GetAction<SetScale>("Slash Waves R", 3).x = 4;
         var spawnHack = new SpawnHack();
         spawnHack.CopyFrom(control.GetState("Slash Waves L").Actions[0] as SpawnObjectFromGlobalPool);
         control.GetState("Slash Waves L").Actions[0] = spawnHack;
@@ -255,6 +257,27 @@ public class ZoteRewriter
         control.RemoveAction("Stomp Shift L", 1);
         control.RemoveAction("Stomp Shift L", 0);
     }
+    private void RewriteSpitStates(PlayMakerFSM control)
+    {
+        control.RemoveAction("Spit Antic", 6);
+        control.RemoveAction("Spit Antic", 5);
+        control.RemoveAction("Spit Antic", 3);
+        control.RemoveAction("Spit Antic", 2);
+        control.RemoveAction("Spit Antic", 1);
+        control.RemoveAction("Spit Antic", 0);
+        control.RemoveTransition("Spit Antic", "FINISHED");
+        control.AddTransition("Spit Antic", "FINISHED", "Spit L");
+        control.RemoveAction("Spit L", 7);
+        control.RemoveAction("Spit L", 6);
+        control.RemoveAction("Spit L", 5);
+        control.RemoveAction("Spit L", 4);
+        control.RemoveAction("Spit L", 3);
+        control.RemoveAction("Spit L", 2);
+        control.RemoveAction("Spit L", 1);
+        control.RemoveAction("Spit L", 0);
+        control.RemoveTransition("Spit Recover", "FINISHED");
+        control.AddTransition("Spit Recover", "FINISHED", "Stand");
+    }
     public void Enter()
     {
         var knight = HeroController.instance.gameObject;
@@ -282,6 +305,7 @@ public class ZoteRewriter
         RewriteSlashStates(control);
         RewriteChargeStates(control);
         RewriteDashStates(control);
+        RewriteSpitStates(control);
         foreach (var state in control.FsmStates)
         {
             state.AddCustomAction(() =>

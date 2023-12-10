@@ -58,10 +58,17 @@ public class IZote : Mod
             || control.ActiveStateName == "Stomp Slash"
             || control.ActiveStateName == "Slash End")
         {
-            if (state != "Stomp Shift L")
+            if (state != "Stomp Shift L" && state != "Jump")
                 return;
             var stompHit = control.gameObject.Find("Stomp Hit");
             stompHit.SetActive(false);
+        }
+        if (control.ActiveStateName == "Spit Antic"
+            || control.ActiveStateName == "Spit L"
+            || control.ActiveStateName == "Spit Recover")
+        {
+            if (state != "Stomp Shift L" && state != "Jump")
+                return;
         }
         if (control.ActiveStateName == "Run")
         {
@@ -124,6 +131,10 @@ public class IZote : Mod
                 {
                     SetStateSafe(control, "Charge Antic");
                 }
+            }
+            else if (state == "Spit")
+            {
+                SetStateSafe(control, "Spit Antic");
             }
         }
     }

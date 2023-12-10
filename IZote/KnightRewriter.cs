@@ -6,6 +6,7 @@ internal class KnightRewriter
     {
         HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.DoAttack += DoAttack;
         HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.CanDoubleJump += CanDoubleJump;
+        HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.CanCast += CanCast;
         HKMirror.Hooks.OnHooks.OnHeroController.BeforeOrig.FixedUpdate += FixedUpdate;
     }
     private void ScaleHeight(PlayMakerFSM fsm, float scale)
@@ -89,6 +90,19 @@ internal class KnightRewriter
             return false;
         }
     }
+    private bool CanCast(On.HeroController.orig_CanCast orig, HeroController self)
+    {
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (greyPrinceTransform == null)
+        {
+            return orig(self);
+        }
+        else
+        {
+            return false;
+        }
+    }
     private void FixedUpdate(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_FixedUpdate args)
     {
         if (IZote.instance.zoteRewriter.ready)
@@ -101,7 +115,10 @@ internal class KnightRewriter
                 || control.ActiveStateName == "Slash Waves L"
                 || control.ActiveStateName == "Slash Waves R"
                 || control.ActiveStateName == "Stomp Slash"
-                || control.ActiveStateName == "Slash End")
+                || control.ActiveStateName == "Slash End"
+                || control.ActiveStateName == "Spit Antic"
+                || control.ActiveStateName == "Spit L"
+                || control.ActiveStateName == "Spit Recover")
             {
                 controller.RUN_SPEED = 0;
                 controller.RUN_SPEED_CH = 0;
@@ -191,6 +208,10 @@ internal class KnightRewriter
                 knight.transform.localPosition = localPosition;
             }
             return "Charge";
+        }
+        else if (HeroController.instance.cState.onGround && controller.inputHandler.inputActions.quickCast.IsPressed && controller.CanAttack())
+        {
+            return "Spit";
         }
         else if (controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
         {
