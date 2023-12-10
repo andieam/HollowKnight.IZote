@@ -71,10 +71,24 @@ internal class KnightRewriter
     {
         var controller = HeroController.instance.Reflect();
         controller.nailChargeTimer = 0;
+        controller.runEffect.SetActive(false);
         if (HeroController.instance.cState.onGround)
         {
             if (controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
             {
+                var knight = controller.gameObject;
+                var greyPrinceTransform = knight.transform.Find("Grey Prince");
+                var greyPrince = greyPrinceTransform.gameObject;
+                var control = greyPrince.LocateMyFSM("Control");
+                var rigidbody2D = knight.GetComponent<Rigidbody2D>();
+                var velocity = rigidbody2D.velocity;
+                if (control.ActiveStateName == "Charge Start" && Mathf.Abs(velocity.x) < 1)
+                {
+                    var direction = knight.transform.localScale.x < 0 ? 1 : -1;
+                    var localPosition = knight.transform.localPosition;
+                    localPosition.x += Time.deltaTime * direction;
+                    knight.transform.localPosition = localPosition;
+                }
                 return "Charge";
             }
             else if (HeroController.instance.hero_state == ActorStates.running)
