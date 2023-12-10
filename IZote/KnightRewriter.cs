@@ -23,6 +23,7 @@ internal class KnightRewriter
         controller.RUN_SPEED_CH_COMBO = 12;
         controller.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
         controller.JUMP_SPEED = 25;
+        controller.GetComponent<BoxCollider2D>().size = new Vector2(2.5469f, 3.75f);
     }
     public void Exit()
     {
@@ -32,6 +33,7 @@ internal class KnightRewriter
         controller.RUN_SPEED_CH_COMBO = 11.5f;
         controller.GetComponent<Rigidbody2D>().gravityScale = 0.79f;
         controller.JUMP_SPEED = 16.65f;
+        controller.GetComponent<BoxCollider2D>().size = new Vector2(0.5f, 1.2813f);
     }
     public string Update()
     {

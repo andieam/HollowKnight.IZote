@@ -21,7 +21,7 @@ internal class ZoteRewriter
         control.RemoveTransition("Set Damage", "FINISHED");
         control.AddCustomAction("Set Damage", () =>
         {
-            control.transform.localPosition = new Vector3(0, 2.2788f, 0);
+            control.transform.localPosition = new Vector3(0.1f, 1.1f, 0);
             ready = true;
         });
     }
@@ -90,8 +90,8 @@ internal class ZoteRewriter
         greyPrince.name = "Grey Prince";
         greyPrince.transform.localScale = new Vector3(-1, 1, 1);
         UnityEngine.Object.Destroy(greyPrince.LocateMyFSM("Constrain X"));
-        // UnityEngine.Object.Destroy(greyPrince.GetComponent<DamageHero>());
-        // UnityEngine.Object.Destroy(greyPrince.GetComponent<Rigidbody2D>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<DamageHero>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<Rigidbody2D>());
         var audioSpawnPoint = new GameObject();
         audioSpawnPoint.name = "Audio Spawn Point";
         audioSpawnPoint.transform.parent = greyPrince.transform;
