@@ -19,10 +19,10 @@ public class IZote : Mod
     }
     private void UpdateBefore(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
     {
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            var knight = HeroController.instance.gameObject;
-            var greyPrinceTransform = knight.transform.Find("Grey Prince");
             if (greyPrinceTransform != null)
             {
                 zoteRewriter.Exit();
@@ -36,6 +36,7 @@ public class IZote : Mod
         }
         if (zoteRewriter.ready)
         {
+            greyPrinceTransform.localPosition = new Vector3(0.1f, 1.1f, 0.001f);
             knightRewriter.UpdateBefore();
         }
     }

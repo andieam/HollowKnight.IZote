@@ -69,15 +69,34 @@ public class ZoteRewriter
     }
     private void RewriteLandStates(PlayMakerFSM control)
     {
-        control.InsertCustomAction("Land Waves", () =>
+        var updateShockWave = () =>
         {
             var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
             shockWave.transform.SetPositionY(control.transform.position.y - 4);
+            var spawn = shockWave.LocateMyFSM("Spawn");
+            spawn.AddCustomAction("Spawn", () =>
+            {
+                var spurt = spawn.FsmVariables.FindFsmGameObject("Spurt").Value;
+                spurt.RemoveComponent<DamageHero>();
+                var damageEnemiesCharge = spurt.AddComponent<DamageEnemies>();
+                var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+                damageEnemiesCharge.attackType = AttackTypes.Spell;
+                damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+                damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+                damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+                damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+                damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+                damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+                damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
+            });
+        };
+        control.InsertCustomAction("Land Waves", () =>
+        {
+            updateShockWave();
         }, 9);
         control.InsertCustomAction("Land Waves", () =>
         {
-            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
-            shockWave.transform.SetPositionY(control.transform.position.y - 4);
+            updateShockWave();
         }, 3);
         var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
         control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Land Normal", 3).spawnPoint = audioSpawnPoint;
@@ -151,6 +170,7 @@ public class ZoteRewriter
         UnityEngine.Object.Destroy(greyPrince.GetComponent<DamageHero>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<Rigidbody2D>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyDeathEffectsUninfected>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyHitEffectsUninfected>());
         var audioSpawnPoint = new GameObject();
         audioSpawnPoint.name = "Audio Spawn Point";
         audioSpawnPoint.transform.parent = greyPrince.transform;
