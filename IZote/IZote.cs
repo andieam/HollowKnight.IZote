@@ -8,7 +8,10 @@ public class IZote : Mod
     public override string GetVersion() => "1.0.0.0";
     public override List<(string, string)> GetPreloadNames()
     {
-        return new List<(string, string)> { ("GG_Grey_Prince_Zote", "Grey Prince") };
+        return new List<(string, string)> {
+            ("GG_Grey_Prince_Zote", "Grey Prince"),
+            ("GG_Mighty_Zote","Battle Control")
+        };
     }
     public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {

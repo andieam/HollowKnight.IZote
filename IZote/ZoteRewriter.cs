@@ -4,6 +4,26 @@ public class ZoteRewriter
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
         greyPrinceTemplate = preloadedObjects["GG_Grey_Prince_Zote"]["Grey Prince"];
+        var battleControl = preloadedObjects["GG_Mighty_Zote"]["Battle Control"];
+        var names = new List<(string, string, string)>{
+            ("Zotelings", "Ordeal Zoteling", "Ordeal Zoteling"),
+        };
+        foreach ((string group, string instance, string name) in names)
+        {
+            GameObject minion;
+            if (instance != "")
+            {
+                minion = battleControl.transform.Find(group).gameObject.transform.Find(instance).gameObject;
+            }
+            else
+            {
+                minion = battleControl.transform.Find(group).gameObject;
+            }
+            UnityEngine.Object.Destroy(minion.GetComponent<PersistentBoolItem>());
+            UnityEngine.Object.Destroy(minion.GetComponent<ConstrainPosition>());
+            prefabs[name] = minion;
+            IZote.instance.Log("Minion added: " + minion.name + ".");
+        }
     }
     private void RewriteInitStates(PlayMakerFSM control)
     {
@@ -268,13 +288,28 @@ public class ZoteRewriter
         control.RemoveTransition("Spit Antic", "FINISHED");
         control.AddTransition("Spit Antic", "FINISHED", "Spit L");
         control.RemoveAction("Spit L", 7);
-        control.RemoveAction("Spit L", 6);
-        control.RemoveAction("Spit L", 5);
-        control.RemoveAction("Spit L", 4);
-        control.RemoveAction("Spit L", 3);
-        control.RemoveAction("Spit L", 2);
         control.RemoveAction("Spit L", 1);
         control.RemoveAction("Spit L", 0);
+        control.InsertCustomAction("Spit L", () =>
+        {
+            var zoteling = UnityEngine.Object.Instantiate(prefabs["Ordeal Zoteling"]);
+            var fsm = zoteling.LocateMyFSM("Control");
+            IZote.instance.Log("Upgrading FSM: " + fsm.gameObject.name + " - " + fsm.FsmName + ".");
+            fsm.AddTransition("Dormant", "FINISHED", "Ball");
+            fsm.RemoveAction("Ball", 2);
+            fsm.AddCustomAction("Reset", () =>
+            {
+                UnityEngine.Object.Destroy(fsm.gameObject);
+            });
+            IZote.instance.Log("Upgraded FSM: " + fsm.gameObject.name + " - " + fsm.FsmName + ".");
+            control.FsmVariables.FindFsmGameObject("Zoteling").Value = zoteling;
+            summonQueue.Add(zoteling);
+            if (summonQueue.Count > 2)
+            {
+                UnityEngine.Object.Destroy(summonQueue[0]);
+                summonQueue.RemoveAt(0);
+            }
+        }, 0);
         control.RemoveTransition("Spit Recover", "FINISHED");
         control.AddTransition("Spit Recover", "FINISHED", "Stand");
     }
@@ -327,4 +362,6 @@ public class ZoteRewriter
     public bool ready;
     public GameObject slamEffectNew;
     private List<GameObject> waveQueue = new();
+    private List<GameObject> summonQueue = new();
+    private readonly Dictionary<string, GameObject> prefabs = new();
 }
