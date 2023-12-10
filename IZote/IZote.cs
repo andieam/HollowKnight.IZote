@@ -94,6 +94,10 @@ public class IZote : Mod
             {
                 SetStateSafe(control, "Jump");
             }
+            else if (state == "Stomp")
+            {
+                SetStateSafe(control, "Stomp");
+            }
             else if (state == "Land")
             {
                 SetStateSafe(control, "Land Waves");

@@ -129,6 +129,12 @@ internal class KnightRewriter
         if (!preivouslyOnGround && HeroController.instance.cState.onGround)
         {
             preivouslyOnGround = true;
+            if (mustStomp)
+            {
+                mustStomp = false;
+                controller.gameObject.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
+                return "Slash";
+            }
             return "Land";
         }
         preivouslyOnGround = HeroController.instance.cState.onGround;
@@ -149,6 +155,16 @@ internal class KnightRewriter
             }
             return "Charge";
         }
+        else if (controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
+        {
+            mustStomp = true;
+            controller.gameObject.GetComponent<Rigidbody2D>().gravityScale = 4;
+            return "Stomp";
+        }
+        else if (mustStomp)
+        {
+            return "Stomp";
+        }
         else if (controller.cState.dashing)
         {
             return "Dash";
@@ -168,4 +184,5 @@ internal class KnightRewriter
     }
     private float heightScale = 2;
     private bool preivouslyOnGround;
+    private bool mustStomp;
 }
