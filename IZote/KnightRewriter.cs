@@ -96,7 +96,20 @@ internal class KnightRewriter
         if (IZote.instance.zoteRewriter.ready)
         {
             var controller = HeroController.instance;
-            if (IZote.instance.zoteRewriter.slamEffectNew != null && IZote.instance.zoteRewriter.slamEffectNew.activeSelf)
+            var knight = controller.gameObject;
+            var greyPrinceTransform = knight.transform.Find("Grey Prince");
+            var control = greyPrinceTransform.gameObject.LocateMyFSM("Control");
+            if (control.ActiveStateName == "Land Dir"
+                || control.ActiveStateName == "Slash Waves L"
+                || control.ActiveStateName == "Slash Waves R"
+                || control.ActiveStateName == "Stomp Slash"
+                || control.ActiveStateName == "Slash End")
+            {
+                controller.RUN_SPEED = 0;
+                controller.RUN_SPEED_CH = 0;
+                controller.RUN_SPEED_CH_COMBO = 0;
+            }
+            else if (IZote.instance.zoteRewriter.slamEffectNew != null && IZote.instance.zoteRewriter.slamEffectNew.activeSelf)
             {
                 controller.RUN_SPEED = 6;
                 controller.RUN_SPEED_CH = 6;
@@ -129,10 +142,12 @@ internal class KnightRewriter
         if (!preivouslyOnGround && HeroController.instance.cState.onGround)
         {
             preivouslyOnGround = true;
+            IZote.instance.Log("bbb");
             if (mustStomp)
             {
                 mustStomp = false;
                 controller.gameObject.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
+                IZote.instance.Log("aaa");
                 return "Slash";
             }
             return "Land";

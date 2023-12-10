@@ -109,6 +109,7 @@ public class IZote : Mod
             }
             else if (state == "Stomp")
             {
+                IZote.instance.Log("ccc");
                 SetStateSafe(control, "Stomp");
             }
             else if (state == "Slash")

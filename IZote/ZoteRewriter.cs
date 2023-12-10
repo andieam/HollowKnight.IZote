@@ -26,7 +26,7 @@ public class ZoteRewriter
         control.AddTransition("Activate", "FINISHED", "Roar");
         var wait = new Wait
         {
-            time = 1,//3,
+            time = 3,
             realTime = false
         };
         foreach (var fsmEvent in control.FsmEvents)
@@ -193,8 +193,8 @@ public class ZoteRewriter
         control.RemoveAction("Stomp Slash", 4);
         control.RemoveAction("Stomp Slash", 3);
         control.RemoveAction("Stomp Slash", 2);
-        control.RemoveTransition("Stomp End", "FINISHED");
-        control.AddTransition("Stomp End", "FINISHED", "Stand");
+        control.RemoveTransition("Slash End", "FINISHED");
+        control.AddTransition("Slash End", "FINISHED", "Stand");
     }
     private void RewriteChargeStates(PlayMakerFSM control)
     {
