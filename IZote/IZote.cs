@@ -37,6 +37,7 @@ public class IZote : Mod
         if (zoteRewriter.ready)
         {
             greyPrinceTransform.localPosition = new Vector3(0.1f, 1.1f, 0.001f);
+            knight.GetComponent<tk2dSprite>().color = Vector4.zero;
             knightRewriter.UpdateBefore();
         }
     }
