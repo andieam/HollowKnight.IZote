@@ -18,12 +18,36 @@ public class ZoteRewriter
         control.RemoveAction("Activate", 3);
         control.RemoveAction("Activate", 2);
         control.RemoveAction("Activate", 1);
-        control.RemoveTransition("Set Damage", "FINISHED");
-        control.AddCustomAction("Set Damage", () =>
+        control.AddCustomAction("Activate", () =>
         {
             control.transform.localPosition = new Vector3(0.1f, 1.1f, 0.001f);
+        });
+        control.RemoveTransition("Activate", "FINISHED");
+        control.AddTransition("Activate", "FINISHED", "Roar");
+        var wait = new Wait
+        {
+            time = 2,
+            realTime = false
+        };
+        foreach (var fsmEvent in control.FsmEvents)
+        {
+            if (fsmEvent.Name == "FINISHED")
+            {
+                wait.finishEvent = fsmEvent;
+            }
+        }
+        control.RemoveAction("Roar", 7);
+        control.RemoveAction("Roar", 4);
+        control.RemoveAction("Roar", 0);
+        control.AddAction("Roar", wait);
+        control.AddTransition("Roar", "FINISHED", "Set Damage");
+        control.AddCustomAction("Set Damage", () =>
+        {
+            control.GetAction("Roar End", 0).OnEnter();
+            control.GetAction("Roar End", 2).OnEnter();
             ready = true;
         });
+        control.RemoveTransition("Set Damage", "FINISHED");
     }
     private void RewriteStandStates(PlayMakerFSM control)
     {
