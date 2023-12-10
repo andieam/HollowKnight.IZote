@@ -308,7 +308,7 @@ public class ZoteRewriter
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyHitEffectsUninfected>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<HealthManager>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyDreamnailReaction>());
-            zoteling.layer = LayerMask.NameToLayer("Attack");
+            zoteling.layer = LayerMask.NameToLayer("Player");
             var damageEnemiesCharge = zoteling.AddComponent<DamageEnemies>();
             var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
             damageEnemiesCharge.attackType = AttackTypes.Spell;
