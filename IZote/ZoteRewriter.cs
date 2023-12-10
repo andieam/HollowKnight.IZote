@@ -308,7 +308,8 @@ public class ZoteRewriter
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyHitEffectsUninfected>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<HealthManager>());
             UnityEngine.Object.Destroy(zoteling.GetComponent<EnemyDreamnailReaction>());
-            zoteling.layer = LayerMask.NameToLayer("Player");
+            zoteling.layer = LayerMask.NameToLayer("Attack");
+            zoteling.GetComponent<BoxCollider2D>().isTrigger = true;
             var damageEnemiesCharge = zoteling.AddComponent<DamageEnemies>();
             var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
             damageEnemiesCharge.attackType = AttackTypes.Spell;
@@ -355,6 +356,7 @@ public class ZoteRewriter
             {
                 fsm.GetAction<CheckTargetDirection>("Dir", 1).target.Value = getTrackingEnemy();
             }, 0);
+            fsm.GetAction<SendRandomEvent>("Choice", 3).weights[1] = 0;
         }, 0);
         control.RemoveTransition("Spit Recover", "FINISHED");
         control.AddTransition("Spit Recover", "FINISHED", "Stand");
