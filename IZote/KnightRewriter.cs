@@ -1,7 +1,5 @@
 ﻿using Modding.Utils;
-
 namespace IZote;
-
 internal class KnightRewriter
 {
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
@@ -171,12 +169,10 @@ internal class KnightRewriter
         if (!preivouslyOnGround && HeroController.instance.cState.onGround)
         {
             preivouslyOnGround = true;
-            IZote.instance.Log("bbb");
             if (mustStomp)
             {
                 mustStomp = false;
                 controller.gameObject.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
-                IZote.instance.Log("aaa");
                 return "Slash";
             }
             return "Land";

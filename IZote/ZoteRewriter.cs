@@ -1,5 +1,4 @@
 ﻿namespace IZote;
-
 public class ZoteRewriter
 {
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
@@ -91,36 +90,49 @@ public class ZoteRewriter
         }, 0);
         control.RemoveTransition("Jump", "FINISHED");
     }
+    private void UpdateShockWave(PlayMakerFSM control)
+    {
+        var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
+        while (waveQueue.Count > 3)
+        {
+            UnityEngine.Object.Destroy(waveQueue[0]);
+            waveQueue.RemoveAt(0);
+        }
+        waveQueue.Add(shockWave);
+        IZote.instance.Log("Current number of waves is " + waveQueue.Count + ".");
+        shockWave.transform.SetPositionY(control.transform.position.y - 4);
+        var spawn = shockWave.LocateMyFSM("Spawn");
+        spawn.AddCustomAction("Spawn", () =>
+        {
+            var spurt = spawn.FsmVariables.FindFsmGameObject("Spurt").Value;
+            spurt.RemoveComponent<DamageHero>();
+            var damageEnemiesCharge = spurt.AddComponent<DamageEnemies>();
+            var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+            damageEnemiesCharge.attackType = AttackTypes.Spell;
+            damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+            damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+            damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+            damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+            damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+            damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+            damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
+        });
+    }
     private void RewriteLandStates(PlayMakerFSM control)
     {
-        var updateShockWave = () =>
-        {
-            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
-            shockWave.transform.SetPositionY(control.transform.position.y - 4);
-            var spawn = shockWave.LocateMyFSM("Spawn");
-            spawn.AddCustomAction("Spawn", () =>
-            {
-                var spurt = spawn.FsmVariables.FindFsmGameObject("Spurt").Value;
-                spurt.RemoveComponent<DamageHero>();
-                var damageEnemiesCharge = spurt.AddComponent<DamageEnemies>();
-                var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
-                damageEnemiesCharge.attackType = AttackTypes.Spell;
-                damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
-                damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
-                damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
-                damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
-                damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
-                damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
-                damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
-            });
-        };
+        var spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Land Waves").Actions[0] as SpawnObjectFromGlobalPool);
+        control.GetState("Land Waves").Actions[0] = spawnHack;
+        spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Land Waves").Actions[6] as SpawnObjectFromGlobalPool);
+        control.GetState("Land Waves").Actions[6] = spawnHack;
         control.InsertCustomAction("Land Waves", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 9);
         control.InsertCustomAction("Land Waves", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 3);
         var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
         control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Land Normal", 3).spawnPoint = audioSpawnPoint;
@@ -157,42 +169,33 @@ public class ZoteRewriter
         stompHit.layer = LayerMask.NameToLayer("Attack");
         stompHit.RemoveComponent<DamageHero>();
         stompHit.AddComponent<DamageEnemies>();
-        var updateShockWave = () =>
-        {
-            var shockWave = control.FsmVariables.FindFsmGameObject("Shockwave").Value;
-            shockWave.transform.SetPositionY(control.transform.position.y - 4);
-            var spawn = shockWave.LocateMyFSM("Spawn");
-            spawn.AddCustomAction("Spawn", () =>
-            {
-                var spurt = spawn.FsmVariables.FindFsmGameObject("Spurt").Value;
-                spurt.RemoveComponent<DamageHero>();
-                var damageEnemiesCharge = spurt.AddComponent<DamageEnemies>();
-                var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
-                damageEnemiesCharge.attackType = AttackTypes.Spell;
-                damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
-                damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
-                damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
-                damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
-                damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
-                damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
-                damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
-            });
-        };
+        var spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Slash Waves L").Actions[0] as SpawnObjectFromGlobalPool);
+        control.GetState("Slash Waves L").Actions[0] = spawnHack;
+        spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Slash Waves L").Actions[6] as SpawnObjectFromGlobalPool);
+        control.GetState("Slash Waves L").Actions[6] = spawnHack;
+        spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Slash Waves R").Actions[0] as SpawnObjectFromGlobalPool);
+        control.GetState("Slash Waves R").Actions[0] = spawnHack;
+        spawnHack = new SpawnHack();
+        spawnHack.CopyFrom(control.GetState("Slash Waves R").Actions[6] as SpawnObjectFromGlobalPool);
+        control.GetState("Slash Waves R").Actions[6] = spawnHack;
         control.InsertCustomAction("Slash Waves L", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 9);
         control.InsertCustomAction("Slash Waves L", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 3);
         control.InsertCustomAction("Slash Waves R", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 9);
         control.InsertCustomAction("Slash Waves R", () =>
         {
-            updateShockWave();
+            UpdateShockWave(control);
         }, 3);
         control.RemoveAction("Stomp Slash", 4);
         control.RemoveAction("Stomp Slash", 3);
@@ -299,4 +302,5 @@ public class ZoteRewriter
     private GameObject greyPrinceTemplate;
     public bool ready;
     public GameObject slamEffectNew;
+    private List<GameObject> waveQueue = new();
 }
