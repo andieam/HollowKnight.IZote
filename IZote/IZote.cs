@@ -14,11 +14,38 @@ public class IZote : Mod
     {
         knightRewriter.Initialize(preloadedObjects);
         zoteRewriter.Initialize(preloadedObjects);
-        HKMirror.Hooks.OnHooks.OnHeroController.AfterOrig.Update += Update;
+        HKMirror.Hooks.OnHooks.OnHeroController.BeforeOrig.Update += UpdateBefore;
+        HKMirror.Hooks.OnHooks.OnHeroController.AfterOrig.Update += UpdateAfter;
+    }
+    private void UpdateBefore(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
+    {
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            var knight = HeroController.instance.gameObject;
+            var greyPrinceTransform = knight.transform.Find("Grey Prince");
+            if (greyPrinceTransform != null)
+            {
+                zoteRewriter.Exit();
+                knightRewriter.Exit();
+            }
+            else
+            {
+                knightRewriter.Enter();
+                zoteRewriter.Enter();
+            }
+        }
+        if (zoteRewriter.ready)
+        {
+            knightRewriter.UpdateBefore();
+        }
     }
     private void SetStateSafe(PlayMakerFSM control, string state)
     {
         if (control.ActiveStateName == state)
+        {
+            return;
+        }
+        if (control.ActiveStateName == "Land Waves" || control.ActiveStateName == "Land Normal")
         {
             return;
         }
@@ -37,7 +64,7 @@ public class IZote : Mod
         }
         control.SetState(state);
     }
-    private void UpdateStates()
+    private void UpdateAfter(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
     {
         if (zoteRewriter.ready)
         {
@@ -45,7 +72,7 @@ public class IZote : Mod
             var greyPrinceTransform = knight.transform.Find("Grey Prince");
             var greyPrince = greyPrinceTransform.gameObject;
             var control = greyPrince.LocateMyFSM("Control");
-            var state = knightRewriter.Update();
+            var state = knightRewriter.UpdateAfter();
             if (state == "Stand")
             {
                 SetStateSafe(control, "Stand");
@@ -65,6 +92,10 @@ public class IZote : Mod
             {
                 SetStateSafe(control, "Jump");
             }
+            else if (state == "Land")
+            {
+                SetStateSafe(control, "Land Waves");
+            }
             else if (state == "Charge")
             {
                 if (control.ActiveStateName != "Charge Start")
@@ -74,26 +105,7 @@ public class IZote : Mod
             }
         }
     }
-    private void Update(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
-    {
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            var knight = HeroController.instance.gameObject;
-            var greyPrinceTransform = knight.transform.Find("Grey Prince");
-            if (greyPrinceTransform != null)
-            {
-                zoteRewriter.Exit();
-                knightRewriter.Exit();
-            }
-            else
-            {
-                knightRewriter.Enter();
-                zoteRewriter.Enter();
-            }
-        }
-        UpdateStates();
-    }
     public static IZote instance;
     private KnightRewriter knightRewriter = new();
-    private ZoteRewriter zoteRewriter = new();
+    public ZoteRewriter zoteRewriter = new();
 }

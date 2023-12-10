@@ -1,6 +1,6 @@
 ﻿namespace IZote;
 
-internal class ZoteRewriter
+public class ZoteRewriter
 {
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
@@ -67,6 +67,30 @@ internal class ZoteRewriter
         }, 0);
         control.RemoveTransition("Jump", "FINISHED");
     }
+    private void RewriteLandStates(PlayMakerFSM control)
+    {
+        var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
+        control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Land Normal", 3).spawnPoint = audioSpawnPoint;
+        control.RemoveAction("Land Normal", 4);
+        control.RemoveAction("Land Normal", 1);
+        control.AddCustomAction("Land Normal", () =>
+        {
+            var slamEffect = control.gameObject.Find("Slam Effect");
+            if (slamEffectNew != null)
+            {
+                UnityEngine.Object.Destroy(slamEffectNew);
+            }
+            slamEffectNew = UnityEngine.Object.Instantiate(slamEffect);
+            slamEffectNew.transform.localPosition = slamEffect.transform.position;
+            slamEffectNew.transform.localScale = slamEffect.transform.lossyScale;
+            slamEffectNew.SetActive(true);
+            slamEffectNew.name = "Slam Effect New";
+        });
+        control.RemoveTransition("Land Normal", "FINISHED");
+        control.AddTransition("Land Normal", "FINISHED", "Stand");
+        var slamEffect = control.gameObject.Find("Slam Effect");
+        slamEffect.transform.localPosition = new Vector3(-0.39f, -2.8f, 0.01f);
+    }
     private void RewriteChargeStates(PlayMakerFSM control)
     {
         var chargeHit = control.gameObject.Find("Charge Hit");
@@ -126,6 +150,7 @@ internal class ZoteRewriter
         RewriteStandStates(control);
         RewriteRunStates(control);
         RewriteJumpStates(control);
+        RewriteLandStates(control);
         RewriteChargeStates(control);
         RewriteDashStates(control);
         foreach (var state in control.FsmStates)
@@ -147,4 +172,5 @@ internal class ZoteRewriter
     }
     private GameObject greyPrinceTemplate;
     public bool ready;
+    public GameObject slamEffectNew;
 }

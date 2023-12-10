@@ -1,19 +1,14 @@
-﻿namespace IZote;
+﻿using Modding.Utils;
+
+namespace IZote;
 
 internal class KnightRewriter
 {
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
         HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.DoAttack += DoAttack;
-    }
-    private void DoAttack(On.HeroController.orig_DoAttack orig, HeroController self)
-    {
-        var knight = HeroController.instance.gameObject;
-        var greyPrinceTransform = knight.transform.Find("Grey Prince");
-        if (greyPrinceTransform == null)
-        {
-            orig(self);
-        }
+        HKMirror.Hooks.OnHooks.OnHeroController.WithOrig.CanDoubleJump += CanDoubleJump;
+        HKMirror.Hooks.OnHooks.OnHeroController.BeforeOrig.FixedUpdate += FixedUpdate;
     }
     private void ScaleHeight(PlayMakerFSM fsm, float scale)
     {
@@ -48,6 +43,7 @@ internal class KnightRewriter
         ScaleHeight(controller.shadowRingPrefab, heightScale);
         controller.DASH_SPEED = 35;
         controller.DASH_SPEED_SHARP = 35;
+        controller.BIG_FALL_TIME = Mathf.Infinity;
     }
     public void Exit()
     {
@@ -70,8 +66,53 @@ internal class KnightRewriter
         ScaleHeight(controller.shadowRingPrefab, 1 / heightScale);
         controller.DASH_SPEED = 20;
         controller.DASH_SPEED_SHARP = 28;
+        controller.BIG_FALL_TIME = 1.1f;
     }
-    public string Update()
+    private void DoAttack(On.HeroController.orig_DoAttack orig, HeroController self)
+    {
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (greyPrinceTransform == null)
+        {
+            orig(self);
+        }
+    }
+    private bool CanDoubleJump(On.HeroController.orig_CanDoubleJump orig, HeroController self)
+    {
+        var knight = HeroController.instance.gameObject;
+        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (greyPrinceTransform == null)
+        {
+            return orig(self);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    private void FixedUpdate(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_FixedUpdate args)
+    {
+        if (IZote.instance.zoteRewriter.ready)
+        {
+            var controller = HeroController.instance;
+            if (IZote.instance.zoteRewriter.slamEffectNew != null && IZote.instance.zoteRewriter.slamEffectNew.activeSelf)
+            {
+                controller.RUN_SPEED = 6;
+                controller.RUN_SPEED_CH = 6;
+                controller.RUN_SPEED_CH_COMBO = 6;
+            }
+            else
+            {
+                controller.RUN_SPEED = 12;
+                controller.RUN_SPEED_CH = 12;
+                controller.RUN_SPEED_CH_COMBO = 12;
+            }
+        }
+    }
+    public void UpdateBefore()
+    {
+    }
+    public string UpdateAfter()
     {
         var controller = HeroController.instance.Reflect();
         controller.nailChargeTimer = 0;
@@ -79,6 +120,17 @@ internal class KnightRewriter
         {
             controller.runEffect.SetActive(false);
         }
+        var runEffect = controller.gameObject.scene.FindGameObject("Run Effects(Clone)");
+        if (runEffect != null)
+        {
+            GameObject.Destroy(runEffect);
+        }
+        if (!preivouslyOnGround && HeroController.instance.cState.onGround)
+        {
+            preivouslyOnGround = true;
+            return "Land";
+        }
+        preivouslyOnGround = HeroController.instance.cState.onGround;
         if (HeroController.instance.cState.onGround && controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
         {
             var knight = controller.gameObject;
@@ -114,4 +166,5 @@ internal class KnightRewriter
         }
     }
     private float heightScale = 2;
+    private bool preivouslyOnGround;
 }
