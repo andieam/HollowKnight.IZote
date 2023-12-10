@@ -15,6 +15,18 @@ internal class KnightRewriter
             orig(self);
         }
     }
+    private void ScaleHeight(PlayMakerFSM fsm, float scale)
+    {
+        var localScale = fsm.transform.localScale;
+        localScale.y *= scale;
+        fsm.transform.localScale = localScale;
+    }
+    private void ScaleHeight(GameObject gameObject, float scale)
+    {
+        var localScale = gameObject.transform.localScale;
+        localScale.y *= scale;
+        gameObject.transform.localScale = localScale;
+    }
     public void Enter()
     {
         var controller = HeroController.instance;
@@ -24,6 +36,16 @@ internal class KnightRewriter
         controller.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
         controller.JUMP_SPEED = 25;
         controller.GetComponent<BoxCollider2D>().size = new Vector2(2.5469f, 3.75f);
+        var heroBox = controller.gameObject.Find("HeroBox");
+        heroBox.GetComponent<BoxCollider2D>().size = new Vector2(2.5469f, 3.75f);
+        controller.GetComponent<tk2dSprite>().color = Vector4.zero;
+        ScaleHeight(controller.dashBurst, heightScale);
+        ScaleHeight(controller.sharpShadowPrefab, heightScale);
+        ScaleHeight(controller.shadowdashDownBurstPrefab, heightScale);
+        ScaleHeight(controller.shadowdashBurstPrefab, heightScale);
+        ScaleHeight(controller.shadowRechargePrefab, heightScale);
+        ScaleHeight(controller.shadowdashParticlesPrefab, heightScale);
+        ScaleHeight(controller.shadowRingPrefab, heightScale);
     }
     public void Exit()
     {
@@ -34,6 +56,16 @@ internal class KnightRewriter
         controller.GetComponent<Rigidbody2D>().gravityScale = 0.79f;
         controller.JUMP_SPEED = 16.65f;
         controller.GetComponent<BoxCollider2D>().size = new Vector2(0.5f, 1.2813f);
+        var heroBox = controller.gameObject.Find("HeroBox");
+        heroBox.GetComponent<BoxCollider2D>().size = new Vector2(0.4554f, 1.1875f);
+        controller.GetComponent<tk2dSprite>().color = Vector4.one;
+        ScaleHeight(controller.dashBurst, 1 / heightScale);
+        ScaleHeight(controller.sharpShadowPrefab, 1 / heightScale);
+        ScaleHeight(controller.shadowdashDownBurstPrefab, 1 / heightScale);
+        ScaleHeight(controller.shadowdashBurstPrefab, 1 / heightScale);
+        ScaleHeight(controller.shadowRechargePrefab, 1 / heightScale);
+        ScaleHeight(controller.shadowdashParticlesPrefab, 1 / heightScale);
+        ScaleHeight(controller.shadowRingPrefab, 1 / heightScale);
     }
     public string Update()
     {
@@ -59,4 +91,5 @@ internal class KnightRewriter
             return "Jump";
         }
     }
+    private float heightScale = 2;
 }

@@ -21,7 +21,7 @@ internal class ZoteRewriter
         control.RemoveTransition("Set Damage", "FINISHED");
         control.AddCustomAction("Set Damage", () =>
         {
-            control.transform.localPosition = new Vector3(0.1f, 1.1f, 0);
+            control.transform.localPosition = new Vector3(0.1f, 1.1f, 0.001f);
             ready = true;
         });
     }
@@ -69,10 +69,27 @@ internal class ZoteRewriter
     }
     private void RewriteChargeStates(PlayMakerFSM control)
     {
+        var chargeHit = control.gameObject.Find("Charge Hit");
+        chargeHit.layer = LayerMask.NameToLayer("Attack");
+        chargeHit.RemoveComponent<DamageHero>();
+        chargeHit.AddComponent<DamageEnemies>();
         var audioSpawnPoint = control.transform.Find("Audio Spawn Point").gameObject;
         control.GetAction<HutongGames.PlayMaker.Actions.AudioPlayerOneShotSingle>("Charge Antic", 3).spawnPoint = audioSpawnPoint;
         control.RemoveAction("Charge Antic", 2);
         control.RemoveAction("Charge Antic", 1);
+        control.AddCustomAction("Charge Antic", () =>
+        {
+            var damageEnemiesCharge = chargeHit.GetComponent<DamageEnemies>();
+            var damageEnemiesSlash = HeroController.instance.gameObject.Find("Attacks").Find("Slash").LocateMyFSM("damages_enemy");
+            damageEnemiesCharge.attackType = (AttackTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("attackType").Value;
+            damageEnemiesCharge.circleDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("circleDirection").Value;
+            damageEnemiesCharge.damageDealt = damageEnemiesSlash.FsmVariables.GetFsmInt("damageDealt").Value;
+            damageEnemiesCharge.direction = damageEnemiesSlash.FsmVariables.GetFsmFloat("direction").Value;
+            damageEnemiesCharge.ignoreInvuln = damageEnemiesSlash.FsmVariables.GetFsmBool("Ignore Invuln").Value;
+            damageEnemiesCharge.magnitudeMult = damageEnemiesSlash.FsmVariables.GetFsmFloat("magnitudeMult").Value;
+            damageEnemiesCharge.moveDirection = damageEnemiesSlash.FsmVariables.GetFsmBool("moveDirection").Value;
+            damageEnemiesCharge.specialType = (SpecialTypes)damageEnemiesSlash.FsmVariables.GetFsmInt("Special Type").Value;
+        });
         control.RemoveAction("Charge Start", 7);
         control.RemoveAction("Charge Start", 6);
         control.RemoveAction("Charge Start", 5);
@@ -92,6 +109,7 @@ internal class ZoteRewriter
         UnityEngine.Object.Destroy(greyPrince.LocateMyFSM("Constrain X"));
         UnityEngine.Object.Destroy(greyPrince.GetComponent<DamageHero>());
         UnityEngine.Object.Destroy(greyPrince.GetComponent<Rigidbody2D>());
+        UnityEngine.Object.Destroy(greyPrince.GetComponent<EnemyDeathEffectsUninfected>());
         var audioSpawnPoint = new GameObject();
         audioSpawnPoint.name = "Audio Spawn Point";
         audioSpawnPoint.transform.parent = greyPrince.transform;
