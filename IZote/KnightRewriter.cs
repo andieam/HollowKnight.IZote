@@ -46,6 +46,8 @@ internal class KnightRewriter
         ScaleHeight(controller.shadowRechargePrefab, heightScale);
         ScaleHeight(controller.shadowdashParticlesPrefab, heightScale);
         ScaleHeight(controller.shadowRingPrefab, heightScale);
+        controller.DASH_SPEED = 35;
+        controller.DASH_SPEED_SHARP = 35;
     }
     public void Exit()
     {
@@ -66,39 +68,45 @@ internal class KnightRewriter
         ScaleHeight(controller.shadowRechargePrefab, 1 / heightScale);
         ScaleHeight(controller.shadowdashParticlesPrefab, 1 / heightScale);
         ScaleHeight(controller.shadowRingPrefab, 1 / heightScale);
+        controller.DASH_SPEED = 20;
+        controller.DASH_SPEED_SHARP = 28;
     }
     public string Update()
     {
         var controller = HeroController.instance.Reflect();
         controller.nailChargeTimer = 0;
-        controller.runEffect.SetActive(false);
-        if (HeroController.instance.cState.onGround)
+        if (controller.runEffect != null)
         {
-            if (controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
+            controller.runEffect.SetActive(false);
+        }
+        if (HeroController.instance.cState.onGround && controller.inputHandler.inputActions.attack.IsPressed && controller.CanAttack())
+        {
+            var knight = controller.gameObject;
+            var greyPrinceTransform = knight.transform.Find("Grey Prince");
+            var greyPrince = greyPrinceTransform.gameObject;
+            var control = greyPrince.LocateMyFSM("Control");
+            var rigidbody2D = knight.GetComponent<Rigidbody2D>();
+            var velocity = rigidbody2D.velocity;
+            if (control.ActiveStateName == "Charge Start" && Mathf.Abs(velocity.x) < 1)
             {
-                var knight = controller.gameObject;
-                var greyPrinceTransform = knight.transform.Find("Grey Prince");
-                var greyPrince = greyPrinceTransform.gameObject;
-                var control = greyPrince.LocateMyFSM("Control");
-                var rigidbody2D = knight.GetComponent<Rigidbody2D>();
-                var velocity = rigidbody2D.velocity;
-                if (control.ActiveStateName == "Charge Start" && Mathf.Abs(velocity.x) < 1)
-                {
-                    var direction = knight.transform.localScale.x < 0 ? 1 : -1;
-                    var localPosition = knight.transform.localPosition;
-                    localPosition.x += Time.deltaTime * direction;
-                    knight.transform.localPosition = localPosition;
-                }
-                return "Charge";
+                var direction = knight.transform.localScale.x < 0 ? 1 : -1;
+                var localPosition = knight.transform.localPosition;
+                localPosition.x += Time.deltaTime * direction;
+                knight.transform.localPosition = localPosition;
             }
-            else if (HeroController.instance.hero_state == ActorStates.running)
-            {
-                return "Run";
-            }
-            else
-            {
-                return "Stand";
-            }
+            return "Charge";
+        }
+        else if (controller.cState.dashing)
+        {
+            return "Dash";
+        }
+        else if (controller.hero_state == ActorStates.running)
+        {
+            return "Run";
+        }
+        else if (HeroController.instance.cState.onGround)
+        {
+            return "Stand";
         }
         else
         {

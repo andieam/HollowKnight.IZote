@@ -57,6 +57,10 @@ public class IZote : Mod
                     SetStateSafe(control, "Run Antic");
                 }
             }
+            else if (state == "Dash")
+            {
+                SetStateSafe(control, "Stomp Shift L");
+            }
             else if (state == "Jump")
             {
                 SetStateSafe(control, "Jump");

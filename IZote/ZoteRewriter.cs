@@ -99,6 +99,13 @@ internal class ZoteRewriter
         control.RemoveTransition("Charge Start", "R");
         control.RemoveTransition("Charge Start", "FAIL");
     }
+    private void RewriteDashStates(PlayMakerFSM control)
+    {
+        control.GetAction<HutongGames.PlayMaker.Actions.Tk2dPlayAnimationWithEvents>("Stomp Shift L", 3).animationCompleteEvent = null;
+        control.RemoveAction("Stomp Shift L", 2);
+        control.RemoveAction("Stomp Shift L", 1);
+        control.RemoveAction("Stomp Shift L", 0);
+    }
     public void Enter()
     {
         var knight = HeroController.instance.gameObject;
@@ -120,6 +127,7 @@ internal class ZoteRewriter
         RewriteRunStates(control);
         RewriteJumpStates(control);
         RewriteChargeStates(control);
+        RewriteDashStates(control);
         foreach (var state in control.FsmStates)
         {
             state.AddCustomAction(() =>
