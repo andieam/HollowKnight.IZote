@@ -1,147 +1,75 @@
-﻿namespace IZote;
+﻿using UnityEngine.Assertions;
+
+namespace IZote;
+
 public class IZote : Mod
 {
     public IZote() : base("IZote")
     {
-        instance = this;
     }
-    public override string GetVersion() => "1.0.0.0";
+
+    public override string GetVersion() => "2.0.0.0";
+
     public override List<(string, string)> GetPreloadNames()
     {
-        return new List<(string, string)> {
-            ("GG_Grey_Prince_Zote", "Grey Prince"),
-            ("GG_Mighty_Zote","Battle Control")
-        };
+        List<(string, string)> preloadNames = new();
+        foreach (var preloadName in knightAgent.GetPreloadNames())
+        {
+            preloadNames.Add(preloadName);
+        }
+        foreach (var preloadName in zoteAgent.GetPreloadNames())
+        {
+            preloadNames.Add(preloadName);
+        }
+        return preloadNames;
     }
+
     public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
-        knightRewriter.Initialize(preloadedObjects);
-        zoteRewriter.Initialize(preloadedObjects);
-        HKMirror.Hooks.OnHooks.OnHeroController.BeforeOrig.Update += UpdateBefore;
-        HKMirror.Hooks.OnHooks.OnHeroController.AfterOrig.Update += UpdateAfter;
+        HKMirror.Hooks.OnHooks.OnHeroController.AfterOrig.Update += Update;
+        knightAgent.Initialize(preloadedObjects);
+        zoteAgent.Initialize(preloadedObjects);
     }
-    private void UpdateBefore(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
+
+    private bool Installed()
     {
-        var knight = HeroController.instance.gameObject;
-        var greyPrinceTransform = knight.transform.Find("Grey Prince");
+        if (!knightAgent.Installed())
+        {
+            Assert.IsFalse(zoteAgent.Installed());
+            return false;
+        }
+        else
+        {
+            Assert.IsTrue(zoteAgent.Installed());
+            return true;
+        }
+    }
+
+    private void Update(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
+    {
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            if (greyPrinceTransform != null)
+            if (!Installed())
             {
-                zoteRewriter.Exit();
-                knightRewriter.Exit();
+                knightAgent.Install();
+                zoteAgent.Install();
+                Assert.IsTrue(Installed());
             }
             else
             {
-                knightRewriter.Enter();
-                zoteRewriter.Enter();
+                knightAgent.Uninstall();
+                zoteAgent.Uninstall();
+                Assert.IsFalse(Installed());
             }
         }
-        if (zoteRewriter.ready)
+        if (Installed())
         {
-            greyPrinceTransform.localPosition = new Vector3(0.1f, 1.1f, 0.001f);
-            knight.GetComponent<tk2dSprite>().color = Vector4.zero;
-            knightRewriter.UpdateBefore();
+            var zoteMessage = knightAgent.Update(lastKnightMessage);
+            lastKnightMessage = zoteAgent.Update(zoteMessage);
         }
     }
-    private void SetStateSafe(PlayMakerFSM control, string state)
-    {
-        if (control.ActiveStateName == state)
-        {
-            return;
-        }
-        if (control.ActiveStateName == "Land Waves"
-            || control.ActiveStateName == "Land Normal")
-        {
-            return;
-        }
-        if (control.ActiveStateName == "Land Dir"
-            || control.ActiveStateName == "Slash Waves L"
-            || control.ActiveStateName == "Slash Waves R"
-            || control.ActiveStateName == "Stomp Slash"
-            || control.ActiveStateName == "Slash End")
-        {
-            if (state != "Stomp Shift L" && state != "Jump")
-                return;
-            var stompHit = control.gameObject.Find("Stomp Hit");
-            stompHit.SetActive(false);
-        }
-        if (control.ActiveStateName == "Spit Antic"
-            || control.ActiveStateName == "Spit L"
-            || control.ActiveStateName == "Spit Recover")
-        {
-            if (state != "Stomp Shift L" && state != "Jump")
-                return;
-        }
-        if (control.ActiveStateName == "Run")
-        {
-            var action = control.GetAction("Run End", 1);
-            action.OnEnter();
-        }
-        else if ((control.ActiveStateName == "Charge Antic" && state != "Charge Start") || control.ActiveStateName == "Charge Start")
-        {
-            foreach (var i in new List<int> { 4, 5, 6, 7, 9 })
-            {
-                var action = control.GetAction("Charge Fall", i);
-                action.OnEnter();
-            }
-        }
-        control.SetState(state);
-    }
-    private void UpdateAfter(HKMirror.Hooks.OnHooks.OnHeroController.Delegates.Params_Update args)
-    {
-        if (zoteRewriter.ready)
-        {
-            var knight = HeroController.instance.gameObject;
-            var greyPrinceTransform = knight.transform.Find("Grey Prince");
-            var greyPrince = greyPrinceTransform.gameObject;
-            var control = greyPrince.LocateMyFSM("Control");
-            var state = knightRewriter.UpdateAfter();
-            if (state == "Stand")
-            {
-                SetStateSafe(control, "Stand");
-            }
-            else if (state == "Run")
-            {
-                if (control.ActiveStateName != "Run")
-                {
-                    SetStateSafe(control, "Run Antic");
-                }
-            }
-            else if (state == "Dash")
-            {
-                SetStateSafe(control, "Stomp Shift L");
-            }
-            else if (state == "Jump")
-            {
-                SetStateSafe(control, "Jump");
-            }
-            else if (state == "Land")
-            {
-                SetStateSafe(control, "Land Waves");
-            }
-            else if (state == "Stomp")
-            {
-                SetStateSafe(control, "Stomp");
-            }
-            else if (state == "Slash")
-            {
-                SetStateSafe(control, "Land Dir");
-            }
-            else if (state == "Charge")
-            {
-                if (control.ActiveStateName != "Charge Start")
-                {
-                    SetStateSafe(control, "Charge Antic");
-                }
-            }
-            else if (state == "Spit")
-            {
-                SetStateSafe(control, "Spit Antic");
-            }
-        }
-    }
-    public static IZote instance;
-    private KnightRewriter knightRewriter = new();
-    public ZoteRewriter zoteRewriter = new();
+
+    private KnightAgent knightAgent;
+    private ZoteAgent zoteAgent;
+    private KnightAgent.Message lastKnightMessage;
 }
