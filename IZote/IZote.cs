@@ -1,6 +1,4 @@
-﻿using UnityEngine.Assertions;
-
-namespace IZote;
+﻿namespace IZote;
 
 public class IZote : Mod
 {

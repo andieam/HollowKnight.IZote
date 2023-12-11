@@ -1,4 +1,5 @@
 ﻿namespace IZote;
+
 internal class ZoteAgent : Agent<ZoteAgent.Message, KnightAgent.Message>
 {
     public class Message { }
